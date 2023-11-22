@@ -118,10 +118,10 @@ class Game:
 
 if __name__ == "__main__":
 
-    if randint(0, 1) == 1:
-        print("The police has raided the underground casino! You are arrested and charged with illegal gambling.")
-        print("Better call Saul!")
-        raise UnderArrestException("You are under arrest!")
+    # if randint(0, 1) == 1:
+    #     print("The police has raided the underground casino! You are arrested and charged with illegal gambling.")
+    #     print("Better call Saul!")
+    #     raise UnderArrestException("You are under arrest!")
 
     game = Game()
     #this is a test with a single player. who knows? i might wire this with websocket and make it multiplayer
