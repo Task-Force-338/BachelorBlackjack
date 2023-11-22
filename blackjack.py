@@ -1,3 +1,4 @@
+from bot import BlackJackBot
 from cards import BlackjackCard, init_blackjack_deck
 from random import randint
 from bettercallsaul import UnderArrestException
@@ -41,7 +42,7 @@ class Player:
         if self.score > 21:
             self.bust = True
     
-    def stand(self):
+    def standup(self):
         self.stand = True
 
     def double_down(self, deck):
@@ -126,6 +127,9 @@ if __name__ == "__main__":
     game = Game()
     #this is a test with a single player. who knows? i might wire this with websocket and make it multiplayer
     game.add_player(input("What is your name? "))
+    if game.players[0].name.lower() == "prolog":
+        print("Okay, then. Using the prolog bot instead.")
+        game.players[0] = BlackJackBot()
     game.deal()
     print(game)
 
@@ -137,13 +141,31 @@ if __name__ == "__main__":
             print("You already have 21!")
             game.players[0].stand = True
             break
+        
+        if len(game.players[0].hand) == 2:
+            command = input("Hit, stand, or double down? ").lower()
+            if command == "hit" or command == "h":
+                game.players[0].hit(game.deck)
+                print(game.players[0])
+            elif command == "stand" or command == "s":
+                game.players[0].standup()
+                print(game.players[0])
+            elif command == "double down" or command == "double" or command == "dd":
+                game.players[0].double_down(game.deck)
+                print(game.players[0])
+            else:
+                print("Invalid input. Try again.")
 
-        if input("Hit or stand? ").lower() == "hit":
-            game.players[0].hit(game.deck)
-            print(game.players[0])
         else:
-            game.players[0].stand = True
-            print(game.players[0])
+            command = input("Hit or stand? ").lower()
+            if command == "hit" or command == "h":
+                game.players[0].hit(game.deck)
+                print(game.players[0])
+            elif command == "stand" or command == "s":
+                game.players[0].standup()
+                print(game.players[0])
+            else:
+                print("Invalid input. Try again.")
     
     if game.players[0].bust:
         print("You bust!")
