@@ -64,6 +64,12 @@ class Card:
     
     def __ne__(self, other):
         return self.value != other.value
+
+    def get_rank(self):
+        return self.rank
+
+    def get_suit(self):
+        return self.suit
     
 def init_deck():
     deck = []
