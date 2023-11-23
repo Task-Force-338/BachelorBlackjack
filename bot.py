@@ -4,11 +4,13 @@ from blackjack import Player as BlackjackPlayer
 from cards import BlackjackCard, init_blackjack_deck
 
 prolog = Prolog()
+prolog.consult("bjbot.pl")
 
-bot_names = ["Prolog", "SPB9000", "Aigis", "Labrys", "Pathfinder", "Asimo", "Pepper", "Bender", "R2D2", "C3PO", "TARS", "KITT", "HAL9000", "GLaDOS", "Wheatley", "TARS", "Marvin", "Data", "Wall-E", "Eve", "Johnny5", "Robocop", "Chappie", "Sonny", "T-800", "T-1000", "T-X", "T-3000", "T-5000", "T-1000000"]
+bot_names = ["Prolog", "SPB9000", "Aigis", "Labrys", "Pathfinder", "Asimo", "Pepper", "Bender", "R2D2", "C3PO", "TARS", "KITT", "HAL9000", "GLaDOS", "Wheatley", "TARS", "Marvin", "Data", "Wall-E", "Eve", "Johnny5", "Robocop", "Chappie", "Sonny", "T-800", "T-1000", "T-X", "T-3000", "T-5000", "T-1000000", "Nano Shinonome", "BB-8"]
 
-class BlackJackBot(BlackjackPlayer):
+class BlackJackBot(BlackjackPlayer): # inherits from Player as, well, it is a player
     def __init__(self):
+        super().__init__("BlackJackBot 9000")
         self.prolog = Prolog()
         self.prolog.consult("blackjack.pl")
         self.observedDeck = init_blackjack_deck()
