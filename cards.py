@@ -67,6 +67,28 @@ class Card:
 
     def get_rank(self):
         return self.rank
+    
+    def get_rank_as_num(self):
+        if self.rank == Card.Rank.TWO:
+            return 2
+        elif self.rank == Card.Rank.THREE:
+            return 3
+        elif self.rank == Card.Rank.FOUR:
+            return 4
+        elif self.rank == Card.Rank.FIVE:
+            return 5
+        elif self.rank == Card.Rank.SIX:
+            return 6
+        elif self.rank == Card.Rank.SEVEN:
+            return 7
+        elif self.rank == Card.Rank.EIGHT:
+            return 8
+        elif self.rank == Card.Rank.NINE:
+            return 9
+        elif self.rank == Card.Rank.TEN:
+            return 10
+        else:
+            return self.get_rank()
 
     def get_suit(self):
         return self.suit
