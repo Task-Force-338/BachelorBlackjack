@@ -50,13 +50,13 @@ if __name__ == "__main__":
         while True:
             level = int(input("Level: "))
             if level == 1:
-                game.players[0] = BlackJackBot(IntelligenceLevel.LOW)
+                game.players[0] = BlackJackBot(IQLevel=IntelligenceLevel.LOW)
                 break
             elif level == 2:
-                game.players[0] = BlackJackBot(IntelligenceLevel.MEDIUM)
+                game.players[0] = BlackJackBot(IQLevel=IntelligenceLevel.MEDIUM)
                 break
             elif level == 3:
-                game.players[0] = BlackJackBot(IntelligenceLevel.HIGH)
+                game.players[0] = BlackJackBot(IQLevel=IntelligenceLevel.HIGH)
                 break
             else:
                 print("Invalid input. Try again.")
@@ -74,15 +74,19 @@ if __name__ == "__main__":
         
         if len(game.players[0].hand) == 2: # if the player has two cards, then they can double down
             if game.players[0].is_a_bot: # if the player is a bot, then use the bot's strategy note that the bot won't double down at all. it's too risky
+                wait(1) # wait a second so that the player can see what's going on
                 command = game.players[0].get_strategy(game.dealer.showing[0])
                 if command == "hit":
                     game.players[0].hit(game.deck)
+                    print("The bot hits.")
                     print(game.players[0])
-                    wait(1) # wait a second so the player can see what's going on
                 elif command == "stand":
                     game.players[0].standup()
+                    print("The bot stands.")
                     print(game.players[0])
-                    wait(1)
+                else:
+                    print("The bot spit random things.")
+                    print(command)
             else: # if the player is a human, then ask them what they want to do
                 command = input("Hit, stand, or double down? ").lower()
                 if command == "hit" or command == "h":
@@ -99,15 +103,19 @@ if __name__ == "__main__":
 
         else: # if the player has more than two cards, then they can only hit or stand
             if game.players[0].is_a_bot: # if the player is a bot, then use the bot's strategy
+                wait(1)
                 command = game.players[0].get_strategy(game.dealer.showing[0])
                 if command == "hit":
                     game.players[0].hit(game.deck)
+                    print("The bot hits.")
                     print(game.players[0])
-                    wait(1) # wait a second so the player can see what's going on
                 elif command == "stand":
                     game.players[0].standup()
+                    print("The bot stands.")
                     print(game.players[0])
-                    wait(1)
+                else:
+                    print("The bot spit random things.")
+                    print(command)
             else: # if the player is a human, then ask them what they want to do
                 command = input("Hit or stand? ").lower()
                 if command == "hit" or command == "h":
@@ -120,7 +128,7 @@ if __name__ == "__main__":
                     print("Invalid input. Try again.")
     
     if game.players[0].bust:
-        print("You bust!")
+        print("The bot" if game.players[0].is_a_bot else "You", "bust!")
     else:
         game.dealer.show(game.deck)
         print(game.dealer)
@@ -134,12 +142,12 @@ if __name__ == "__main__":
         
         if game.dealer.bust:
             print("Dealer busts!")
-            print("You win!")
+            print("The bot" if game.players[0].is_a_bot else "You", "win!")
         else:
             if game.dealer.score > game.players[0].score:
                 print("Dealer wins!")
             elif game.dealer.score < game.players[0].score:
-                print("You win!")
+                print("The bot" if game.players[0].is_a_bot else "You", "win!")
             else:
                 print("Push!")
 
