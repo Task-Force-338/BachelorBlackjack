@@ -8,6 +8,7 @@ class Player:
         self.stand = False
         self.bust = False
         self.double = False
+        self.is_a_bot = False
     
     def __str__(self):
         return f"{self.name} has {self.hand} for a score of {self.score}"
