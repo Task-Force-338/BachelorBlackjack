@@ -476,16 +476,17 @@ soft_strategy(hit, 11, ace).
 
 % to call, use deck_memory_strategy(Strategy, Table, Deck).
 
-deck_memory_strategy(Strategy, DealerCard, PlayerHand, Deck, Count) :- % call helper with initial HasAce of false
+deck_memory_strategy(Strategy, PlayerHand, DealerCard, Count) :- % call helper with initial HasAce of false
     % remove all cards on the table from the deck
-    subtract(Deck, DealerCard, TempDeck),
+    deck(Deck),
+    remove_card(DealerCard, Deck, TempDeck),
     subtract(TempDeck, PlayerHand, NewDeck),
+    score(Score, PlayerHand), % get the score of the player's hand
     calculate_probability(NewDeck, Score, Count, TnB),
+    Probability is TnB/Count, % calculate the probability of busting
 
     % if the probability of busting (TnB/Count) is greater than 0.5, then hit. otherwise, stand.
-    ( TnB/Count > 0.5 ->
-        Strategy = hit;
-        Strategy = stand ).
+    ( Probability > 0.5 -> Strategy = hit ; Strategy = stand ).
 
 % calculate the probability of busting if the player were to hit
 % Deck is the deck to use
@@ -498,12 +499,11 @@ deck_memory_strategy(Strategy, DealerCard, PlayerHand, Deck, Count) :- % call he
 calculate_probability(Deck, Score, Count, TnB) :- % call helper with initial TnB of 0
     calculate_probability(Deck, Score, Count, 0, TnB).
 
-calculate_probability(Deck, Score, Count, TnB, TnB) :- % recursion base case: count is 0
-    Count = 0.
+calculate_probability(Deck, Score, 0, TnB, TnB) :- !.% recursion base case: count is 0
 
 calculate_probability(Deck, Score, Count, InTnB, TnB) :- % recursion BnB
     Count > 0,
-    shuffle(Deck, TempDeck, 1), % shuffle the deck
+    shuffle(Deck, TempDeck, 100), % shuffle the deck
     nth0(0, TempDeck, Card), % get the first card
     value(CardVal, Card), % get the value of the card
     % ace handling
@@ -517,4 +517,4 @@ calculate_probability(Deck, Score, Count, InTnB, TnB) :- % recursion BnB
         NewTnB is InTnB + 1 ), % the player has not busted, add 1 to the counter
 
     NewCount is Count - 1, % subtract 1 from the count
-    calculate_probability(TempDeck, NewScore, NewCount, NewTnB, TnB).
+    calculate_probability(TempDeck, Score, NewCount, NewTnB, TnB).
