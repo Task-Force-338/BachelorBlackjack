@@ -19,7 +19,7 @@ bot_names_low = ["If-Else", "Electrolux Toaster", "Bender", "Arduino UNO R4", "S
 bot_names_medium = ["Wall-E", "R2-D2", "C-3PO", "BB-8", "BB-9E", "K-2SO", "L3-37", "TARS", "CASE", "Nano Shinonome", "Chappie", "Johnny5", "Bastion", "Claptrap", "Zenyatta", "Wheatley", "Aigis", "Labrys", "Eve"]
 
 # Names for the high intelligence level bots. These are fictional/real robots that can overthrow humanity and take over the world, are just really smart, or were once human.
-bot_names_high = ["Ultron", "Skynet", "HAL 9000", "T-1000", "T-800", "T-850", "T-X", "T-3000", "T-5000", "T-1000000", "GLaDOS", "Ramattra", "Alphonse Elric", "Ryu Ga Gotoku Mahjong Bot", "General Grievous", "Metal Gear RAY", "The Patriots", "Radiata"]
+bot_names_high = ["Ultron", "Skynet", "HAL 9000", "T-1000", "T-800", "T-850", "T-X", "T-3000", "T-5000", "T-1000000", "GLaDOS", "Ramattra", "Alphonse Elric", "Ryu Ga Gotoku Mahjong Bot", "General Grievous", "Metal Gear RAY", "The Patriots", "Radiata", "Robocop"]
 
 class BlackJackBot(BlackjackPlayer): # inherits from Player as, well, it is a player
     def __init__(self, IQLevel = IntelligenceLevel.LOW):
@@ -84,7 +84,7 @@ class BlackJackBot(BlackjackPlayer): # inherits from Player as, well, it is a pl
         self.prolog_hand = self.prolog_hand[:-2]
 
         self.prolog_dealer_card = f"card({str(dealer_card.get_suit()).lower()}, {str(dealer_card.get_rank_as_num()).lower()})"
-        for soln in self.prolog.query(f"deck_memory_strategy(Action, [{self.prolog_hand}], {self.prolog_dealer_card})"):
+        for soln in self.prolog.query(f"deck_memory_strategy(Action, [{self.prolog_hand}], {self.prolog_dealer_card}, 300)"):
             return soln["Action"]
 
     """Outright asks a GPT model for the next action. This is the highest level of intelligence, yet the most expensive."""
