@@ -23,15 +23,15 @@ rank(king).
 
 % a card is a card if it has a suit and a rank
 
-card(Rank, Suit) :-
-    rank(Rank),
-    suit(Suit).
+card(Suit, Rank) :-
+    suit(Suit),
+    rank(Rank).
 
 % hmm whats the value of that card i wonder?
 % OutVal is the value of the card, this is an output
 % Card is the card to get the value of
 
-value(OutVal, card(Rank, Suit)) :- % literally just check the rank and assign a value
+value(OutVal, card(Suit, Rank)) :- % literally just check the rank and assign a value
     %we dont care about the suit in Blackjack
     ( Rank = ace -> (OutVal is 11; OutVal is 1 );
     Rank = jack -> OutVal is 10 ;
@@ -58,18 +58,8 @@ score(InScore, OutScore, []) :- % recursion base case: empty hand
 % NOTE: this is a single deck, not a shoe.
 
 deck(Deck) :- % generate a deck of cards
-    findall(card(Rank, Suit), card(Rank, Suit), Deck).
+    findall(card(Suit, Rank), card(Suit, Rank), Deck).
 
-% DEBUG: print a deck
-
-print_deck(Deck) :-
-    print_deck(Deck, 0).
-print_deck([Card|Rest], Count) :-
-    Count < 52,
-    write(Card),
-    write('\n'),
-    NewCount is Count + 1,
-    print_deck(Rest, NewCount).
 
 % remove card from deck, used in deck memory play
 % Card is the card to remove
@@ -102,17 +92,17 @@ shuffle(Deck, Deck, 0). % recursion base case: count is 0
 % used to determine if the player has a soft hand
 
 has_ace(Hand, HasAce) :- % call helper with initial HasAce of false
-    aggregate_all(count, member(card(ace,_), Hand), Count), % count the number of aces in the hand
+    aggregate_all(count, member(card(_,ace), Hand), Count), % count the number of aces in the hand
     ( Count > 0 -> HasAce = true ; HasAce = false ). % if the count is greater than 0, then the player has an ace. otherwise, the player does not have an ace.
 
 % check the score of dealer's hand. mostly just a single card because the only time the dealer has more than 1 card is when everyone has standed
 % DealerHand is the dealer's hand
 % DealerScore is the score of the dealer's hand, this is an output
 
-dealer_score(DealerScore, [_, card(Rank,_)]) :- % if the dealer has only 1 card, then just get the value of that card
-    value(DealerScore, card(Rank,_)).
+dealer_score(DealerScore, [_, card(_,Rank)]) :- % if the dealer has only 1 card, then just get the value of that card
+    value(DealerScore, card(_,Rank)).
 % if the dealer somehow has an ace
-dealer_score(ace, [_, card(ace,_)]) :- % if the dealer has an ace, just return ace
+dealer_score(ace, [_, card(_,ace)]) :- % if the dealer has an ace, just return ace
     !.
 
 % AI player strategies starts here.
