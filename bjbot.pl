@@ -66,6 +66,7 @@ deck(Deck) :- % generate a deck of cards
 % NewDeck is the deck after removal, this is an output
 remove_card(Card, Deck, NewDeck) :-
     select(Card, Deck, NewDeck), !. % choose a card, select it, do nothing, then cut
+% or just use subtract predicate lol
 
 % shuffle deck, one of the most important functions in deck memory play
 % Deck is the deck to shuffle
@@ -83,6 +84,25 @@ shuffle(Deck, NewDeck, Count) :- % call helper but with a count
     shuffle(TempDeck, NewDeck, NewCount).
 
 shuffle(Deck, Deck, 0). % recursion base case: count is 0
+
+% check if the player has ace in hand
+% Hand is the hand to check
+% HasAce is the output, true if the player has an ace, false otherwise
+% used to determine if the player has a soft hand
+
+has_ace(Hand, HasAce) :- % call helper with initial HasAce of false
+    aggregate_all(count, member(Card(_,ace), Hand), Count), % count the number of aces in the hand
+    ( Count > 0 -> HasAce = true ; otherwise HasAce = false ). % if the count is greater than 0, then the player has an ace. otherwise, the player does not have an ace.
+
+% check the score of dealer's hand. mostly just a single card because the only time the dealer has more than 1 card is when everyone has standed
+% DealerHand is the dealer's hand
+% DealerScore is the score of the dealer's hand, this is an output
+
+dealer_score(DealerScore, [_, card(_,Rank)]) :- % if the dealer has only 1 card, then just get the value of that card
+    value(DealerScore, card(_,Rank)).
+% if the dealer somehow has an ace
+dealer_score(ace, [_, card(_,ace)]) :- % if the dealer has an ace, just return ace
+    !.
 
 % AI player strategies starts here.
 % You could set what strat the bot will use in the Python code.
@@ -104,25 +124,6 @@ basic_strategy(hit, Hand, DealerCard) :- % hit if score is less than 17. yeah i 
 basic_strategy(stand, Hand, DealerCard) :- % stand if score is greater than or equal to 17
     score(Score, Hand),
     Score >= 17.
-
-% check if the player has ace in hand
-% Hand is the hand to check
-% HasAce is the output, true if the player has an ace, false otherwise
-% used to determine if the player has a soft hand
-
-has_ace(Hand, HasAce) :- % call helper with initial HasAce of false
-    aggregate_all(count, member(Card(_,ace), Hand), Count), % count the number of aces in the hand
-    ( Count > 0 -> HasAce = true ; otherwise HasAce = false ). % if the count is greater than 0, then the player has an ace. otherwise, the player does not have an ace.
-
-% check the score of dealer's hand. mostly just a single card because the only time the dealer has more than1 card is when everyone has standed
-% DealerHand is the dealer's hand
-% DealerScore is the score of the dealer's hand, this is an output
-
-dealer_score(DealerScore, [_, card(_,Rank)]) :- % if the dealer has only 1 card, then just get the value of that card
-    value(DealerScore, card(_,Rank)).
-% if the dealer somehow has an ace
-dealer_score(ace, [_, card(_,ace)]) :- % if the dealer has an ace, just return ace
-    !.
 
 % hard/soft total strategy
 % Strategy is the strategy to use
@@ -462,3 +463,46 @@ soft_strategy(hit, 7, ace).
 soft_strategy(stand, 8, ace).
 soft_strategy(stand, 9, ace).
 soft_strategy(hit, 11, ace).
+
+% deck memory play
+% basically thinks what cards are left in the deck and plays accordingly. might even hit at 20 if the deck is full of low cards or stand at 12 if the deck is full of high cards.
+% as known in the field of computing as Monte Carlo simulation. Albeit a very simple one.
+
+% Strategy is the strategy to use
+% DealerCard is the dealer's card
+% PlayerHand is the player's hand
+% Deck is the deck to use
+
+% to call, use deck_memory_strategy(Strategy, Table, Deck).
+
+deck_memory_strategy(Strategy, DealerCard, PlayerHand, Deck, Count) :- % call helper with initial HasAce of false
+    % remove all cards on the table from the deck
+    subtract(Deck, DealerCard, TempDeck),
+    subtract(TempDeck, PlayerHand, NewDeck),
+    calculate_probability(NewDeck, Count, TnB),
+
+    % if the probability of busting (TnB/Count) is greater than 0.5, then hit. otherwise, stand.
+    ( TnB/Count > 0.5 -> Strategy = hit ; Strategy = stand ).
+
+% calculate the probability of busting if the player were to hit
+% Strategy is the strategy to use
+% Deck is the deck to use
+% Count is the number of times to calculate the probability
+% TnB is the probability of busting, this is an output
+
+% to call, use calculate_probability(Deck, Count, TnB).
+
+calculate_probability(Deck, Count, TnB) :- % call helper with initial TnB of 0
+    calculate_probability(Deck, Count, 0, TnB).
+
+calculate_probability(Deck, Count, TnB, TnB) :- % recursion base case: count is 0
+    Count =< 0.
+
+calculate_probability(Deck, Count, InTnB, TnB) :- % call helper with initial TnB of 0
+    Count > 0,
+    random_permutation(Deck, TempDeck),
+    nth0(0, TempDeck, Card),
+    value(CardVal, Card),
+    NewCount is Count - 1,
+    ( CardVal + InTnB > 21 -> NewTnB is InTnB + 1 ; NewTnB is InTnB ),
+    calculate_probability(TempDeck, NewCount, NewTnB, TnB).
