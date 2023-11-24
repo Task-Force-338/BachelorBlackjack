@@ -99,11 +99,10 @@ has_ace(Hand, HasAce) :- % call helper with initial HasAce of false
 % DealerHand is the dealer's hand
 % DealerScore is the score of the dealer's hand, this is an output
 
-dealer_score(DealerScore, [_, card(_,Rank)]) :- % if the dealer has only 1 card, then just get the value of that card
+dealer_score(ace, card(_,ace)) :- !. % if the dealer has an ace, then the score is ace. also cut because we don't need to check the rest of the rules.
+dealer_score(DealerScore, card(_,Rank)) :- % otherwise, just get the value of the card
     value(DealerScore, card(_,Rank)).
 % if the dealer somehow has an ace
-dealer_score(ace, [_, card(_,ace)]) :- % if the dealer has an ace, just return ace
-    !.
 
 % AI player strategies starts here.
 % You could set what strat the bot will use in the Python code.
