@@ -143,7 +143,7 @@ hard_soft_strategy(Strategy, Score, DealerScore, false) :- % call helper with in
 
 % it is soft if the player has an ace
 hard_soft_strategy(Strategy, Score, DealerScore, true) :- % call helper with initial HasAce of false
-    AdjustedScore is Score - 11, % adjust the score by subtracting 10, ignoring the ace
+    AdjustedScore is Score - 11, % adjust the score by subtracting 11, ignoring the ace
     hard_strategy(Strategy, AdjustedScore, DealerScore).
 
 % very hardcoded list of all hard totals
@@ -467,6 +467,7 @@ soft_strategy(hit, 11, ace).
 % deck memory play
 % basically thinks what cards are left in the deck and plays accordingly. might even hit at 20 if the deck is full of low cards or stand at 12 if the deck is full of high cards.
 % as known in the field of computing as Monte Carlo simulation. Albeit a very simple one.
+% Hell, even it is named after a casino!
 
 % Strategy is the strategy to use
 % DealerCard is the dealer's card
@@ -479,30 +480,41 @@ deck_memory_strategy(Strategy, DealerCard, PlayerHand, Deck, Count) :- % call he
     % remove all cards on the table from the deck
     subtract(Deck, DealerCard, TempDeck),
     subtract(TempDeck, PlayerHand, NewDeck),
-    calculate_probability(NewDeck, Count, TnB),
+    calculate_probability(NewDeck, Score, Count, TnB),
 
     % if the probability of busting (TnB/Count) is greater than 0.5, then hit. otherwise, stand.
-    ( TnB/Count > 0.5 -> Strategy = hit ; Strategy = stand ).
+    ( TnB/Count > 0.5 ->
+        Strategy = hit;
+        Strategy = stand ).
 
 % calculate the probability of busting if the player were to hit
-% Strategy is the strategy to use
 % Deck is the deck to use
+% Score is the score used to calculate if the player will bust if the player were to hit
 % Count is the number of times to calculate the probability
-% TnB is the probability of busting, this is an output
+% TnB is the probability of not busting, this is an output
 
-% to call, use calculate_probability(Deck, Count, TnB).
+% to call, use calculate_probability(Deck, Score, Count, TnB).
 
-calculate_probability(Deck, Count, TnB) :- % call helper with initial TnB of 0
-    calculate_probability(Deck, Count, 0, TnB).
+calculate_probability(Deck, Score, Count, TnB) :- % call helper with initial TnB of 0
+    calculate_probability(Deck, Score, Count, 0, TnB).
 
-calculate_probability(Deck, Count, TnB, TnB) :- % recursion base case: count is 0
-    Count =< 0.
+calculate_probability(Deck, Score, Count, TnB, TnB) :- % recursion base case: count is 0
+    Count = 0.
 
-calculate_probability(Deck, Count, InTnB, TnB) :- % call helper with initial TnB of 0
+calculate_probability(Deck, Score, Count, InTnB, TnB) :- % recursion BnB
     Count > 0,
-    random_permutation(Deck, TempDeck),
-    nth0(0, TempDeck, Card),
-    value(CardVal, Card),
-    NewCount is Count - 1,
-    ( CardVal + InTnB > 21 -> NewTnB is InTnB + 1 ; NewTnB is InTnB ),
-    calculate_probability(TempDeck, NewCount, NewTnB, TnB).
+    shuffle(Deck, TempDeck, 1), % shuffle the deck
+    nth0(0, TempDeck, Card), % get the first card
+    value(CardVal, Card), % get the value of the card
+    % ace handling
+    ( CardVal = 11 -> % if the card is an ace
+        (Score + CardVal > 21 -> % and it it busts if we use ace as 11
+            NewScore is Score + 1; % then use ace as 1
+            NewScore is Score + CardVal); % otherwise use ace as 11
+         NewScore is Score + CardVal ), % if the card is not an ace, then just add the value of the card to the score
+    ( NewScore > 21 -> % if the score is greater than 21
+        NewTnB is InTnB; % then do nothing to the counter, as the player has busted
+        NewTnB is InTnB + 1 ), % the player has not busted, add 1 to the counter
+
+    NewCount is Count - 1, % subtract 1 from the count
+    calculate_probability(TempDeck, NewScore, NewCount, NewTnB, TnB).
