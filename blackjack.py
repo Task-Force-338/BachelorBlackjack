@@ -1,96 +1,10 @@
-from bot import BlackJackBot
-from cards import BlackjackCard, init_blackjack_deck
 from random import randint
+from time import sleep as wait
+
+from blackjackparticipant import Player, Dealer
+from cards import BlackjackCard, init_blackjack_deck
 from bettercallsaul import UnderArrestException
-
-class Player:
-    def __init__(self, name):
-        self.name = name
-        self.hand = []
-        self.score = 0
-        self.stand = False
-        self.bust = False
-        self.double = False
-    
-    def __str__(self):
-        return f"{self.name} has {self.hand} for a score of {self.score}"
-    
-    def __repr__(self):
-        return f"{self.name} has {self.hand} for a score of {self.score}"
-    
-    def hit(self, deck):
-        self.hand.append(deck.pop())
-        self.calc_score()
-        if self.score > 21:
-            self.bust = True
-            self.stand = True
-    
-    def calc_score(self):
-        self.score = 0
-        num_aces = 0
-        for card in self.hand:
-            if isinstance(card, BlackjackCard):
-                if card.rank == BlackjackCard.Rank.ACE:
-                    num_aces += 1
-                    continue
-                self.score += card.value
-        for i in range(num_aces):
-            if self.score + 11 <= 21:
-                self.score += 11
-            else:
-                self.score += 1
-        if self.score > 21:
-            self.bust = True
-    
-    def standup(self):
-        self.stand = True
-
-    def double_down(self, deck):
-        self.hit(deck)
-        self.stand = True
-        self.double = True
-
-class Dealer(Player):
-    def __init__(self):
-        super().__init__("Dealer")
-        self.showing = []
-    
-    def __str__(self):
-        return f"{self.name} has {self.showing} showing for a score of {self.score}"
-    
-    def __repr__(self):
-        return f"{self.name} has {self.showing} showing for a score of {self.score}"
-    
-    def hit(self, deck):
-        self.hand.append(deck.pop())
-    
-    def calc_score(self):
-        self.score = 0
-        num_aces = 0
-        for card in self.showing:
-            if isinstance(card, BlackjackCard):
-                if card.rank == BlackjackCard.Rank.ACE:
-                    num_aces += 1
-                    continue
-                self.score += card.value
-        for i in range(num_aces):
-            if self.score + 11 <= 21:
-                self.score += 11
-            else:
-                self.score += 1
-        if self.score > 21:
-            self.bust = True
-    
-    def show(self, deck):
-        if self.hand == []:
-            self.hand.append(deck.pop())
-        self.showing.append(self.hand.pop())
-        self.calc_score()
-        if self.score > 21:
-            self.bust = True
-            self.stand = True
-        elif self.score >= 17:
-            self.stand = True
+from bot import BlackJackBot, IntelligenceLevel
 
 class Game:
     def __init__(self):
@@ -129,7 +43,23 @@ if __name__ == "__main__":
     game.add_player(input("What is your name? "))
     if game.players[0].name.lower() == "prolog":
         print("Okay, then. Using the prolog bot instead.")
-        game.players[0] = BlackJackBot()
+        print("How smart do you want the bot to be? 1-3")
+        print("1: Basic Strategy. Hit if less than 17, stand if more than 17")
+        print("2: Hard/Soft Strategy. Uses a lookup table to determine whether to hit or stand based on the dealer's card.")
+        print("3: Deck Memory Strategy. Try to remember what cards have been played and use that to predict the next card. Something you can't do in real life without getting kicked out of the casino.")
+        while True:
+            level = int(input("Level: "))
+            if level == 1:
+                game.players[0] = BlackJackBot(IntelligenceLevel.LOW)
+                break
+            elif level == 2:
+                game.players[0] = BlackJackBot(IntelligenceLevel.MEDIUM)
+                break
+            elif level == 3:
+                game.players[0] = BlackJackBot(IntelligenceLevel.HIGH)
+                break
+            else:
+                print("Invalid input. Try again.")
     game.deal()
     print(game)
 
@@ -142,30 +72,52 @@ if __name__ == "__main__":
             game.players[0].stand = True
             break
         
-        if len(game.players[0].hand) == 2:
-            command = input("Hit, stand, or double down? ").lower()
-            if command == "hit" or command == "h":
-                game.players[0].hit(game.deck)
-                print(game.players[0])
-            elif command == "stand" or command == "s":
-                game.players[0].standup()
-                print(game.players[0])
-            elif command == "double down" or command == "double" or command == "dd":
-                game.players[0].double_down(game.deck)
-                print(game.players[0])
-            else:
-                print("Invalid input. Try again.")
+        if len(game.players[0].hand) == 2: # if the player has two cards, then they can double down
+            if game.players[0].is_a_bot: # if the player is a bot, then use the bot's strategy note that the bot won't double down at all. it's too risky
+                command = game.players[0].get_strategy(game.dealer.showing[0])
+                if command == "hit":
+                    game.players[0].hit(game.deck)
+                    print(game.players[0])
+                    wait(1) # wait a second so the player can see what's going on
+                elif command == "stand":
+                    game.players[0].standup()
+                    print(game.players[0])
+                    wait(1)
+            else: # if the player is a human, then ask them what they want to do
+                command = input("Hit, stand, or double down? ").lower()
+                if command == "hit" or command == "h":
+                    game.players[0].hit(game.deck)
+                    print(game.players[0])
+                elif command == "stand" or command == "s":
+                    game.players[0].standup()
+                    print(game.players[0])
+                elif command == "double down" or command == "double" or command == "dd":
+                    game.players[0].double_down(game.deck)
+                    print(game.players[0])
+                else:
+                    print("Invalid input. Try again.")
 
-        else:
-            command = input("Hit or stand? ").lower()
-            if command == "hit" or command == "h":
-                game.players[0].hit(game.deck)
-                print(game.players[0])
-            elif command == "stand" or command == "s":
-                game.players[0].standup()
-                print(game.players[0])
-            else:
-                print("Invalid input. Try again.")
+        else: # if the player has more than two cards, then they can only hit or stand
+            if game.players[0].is_a_bot: # if the player is a bot, then use the bot's strategy
+                command = game.players[0].get_strategy(game.dealer.showing[0])
+                if command == "hit":
+                    game.players[0].hit(game.deck)
+                    print(game.players[0])
+                    wait(1) # wait a second so the player can see what's going on
+                elif command == "stand":
+                    game.players[0].standup()
+                    print(game.players[0])
+                    wait(1)
+            else: # if the player is a human, then ask them what they want to do
+                command = input("Hit or stand? ").lower()
+                if command == "hit" or command == "h":
+                    game.players[0].hit(game.deck)
+                    print(game.players[0])
+                elif command == "stand" or command == "s":
+                    game.players[0].standup()
+                    print(game.players[0])
+                else:
+                    print("Invalid input. Try again.")
     
     if game.players[0].bust:
         print("You bust!")
